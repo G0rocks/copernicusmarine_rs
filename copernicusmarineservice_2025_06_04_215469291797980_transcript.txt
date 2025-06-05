@@ -1,0 +1,91 @@
+Conversation with CopernicusMarineService
+Started on June 4, 2025 at 07:33 PM Paris time CEST (GMT+0200)
+
+---
+
+07:33 PM | Huldar H: Hey Blu, I'm working on a project and want to use copernicusmarine data for the project. How do you want me to cite copernicusmarine and can I use this data?
+
+07:33 PM | Blu: You are allowed to use Copernicus Marine data for your project—access, download, and use are completely free, provided you cite the source appropriately. 
+ For citation, please refer to our Help Center article: How to cite Copernicus Marine products and services (https://help.marine.copernicus.eu/en/articles/4444611-how-to-cite-copernicus-marine-products-and-services). 
+ If you need to cite a specific product, use the following template: 
+ Product Title. E.U. Copernicus Marine Service Information (CMEMS). Marine Data Store (MDS). DOI: 10.48670/moi-xxxxx (Accessed on DD-MMM-YYYY) 
+ Replace the placeholders with the actual product title, DOI, and access date as described in the article. 
+ 
+Source:
+How to cite Copernicus Marine products and services? (https://help.marine.copernicus.eu/en/articles/4444611-how-to-cite-copernicus-marine-products-and-services)
+
+07:33 PM | Blu: Did that answer your question?
+
+07:33 PM | Huldar H: That answered my question 👍
+
+07:33 PM | Blu: Glad I could help. Let me know if you need anything else.
+
+07:34 PM | Blu: Help Blu understand how they’re doing:
+
+07:34 PM | Blu: Rate your conversation
+
+07:35 PM | Huldar H: Great thanks. Now I do need one more thing.
+The project I'm working on is written in rust and I plan to make a module (a.k.a crate, package or library) for the project. Is it okay with copernicusmarine if I make this package open source and freely available? I will of course allow copernicusmarine to take over the rust package if the Copernicus programme wants that
+
+07:35 PM | Blu: Yes, you are permitted to create an open source Rust package that uses Copernicus Marine data. Our datasets and tools are intended to remain open and freely accessible, and there are no restrictions against building and sharing open source software that interacts with our data, as long as you comply with the relevant data licenses and citation requirements. 
+ If you wish to offer Copernicus Marine the opportunity to take over maintenance of your Rust package in the future, you are welcome to do so. The Copernicus Marine Toolbox itself is open source and licensed under the European Union Public Licence (EUPL v1.2), which encourages open collaboration and sharing. 
+ Just ensure you clearly state the license of your package and provide proper attribution to Copernicus Marine data as outlined in our citation guidelines.
+
+07:35 PM | Blu: Is that what you were looking for?
+
+07:36 PM | Huldar H: Great, can you send me a link to the copernicus marine toolbox source code?
+
+07:36 PM | Blu: You can find the Copernicus Marine Toolbox source code on GitHub at the following link: 
+ https://github.com/mercator-ocean/copernicus-marine-toolbox (https://github.com/mercator-ocean/copernicus-marine-toolbox). 
+ This repository contains the full codebase and is the official source for the Toolbox. If you need documentation or usage examples, you can also refer to the official documentation (https://toolbox-docs.marine.copernicus.eu/en/stable/). 
+ 
+Sources:
+Quick overview - Copernicus Marine Toolbox documentation (https://toolbox-docs.marine.copernicus.eu/en/stable/usage/quickoverview.html)
+Copernicus Marine Toolbox documentation (https://toolbox-docs.marine.copernicus.eu/en/stable/index.html)
+
+07:36 PM | Blu: Is that what you were looking for?
+
+07:36 PM | Huldar H: That answered my question 👍
+
+07:36 PM | Blu: Glad I could help. If you have any more questions or need further assistance, feel free to ask.
+
+07:36 PM | Huldar H: Thanks Blu, I appreciate it
+
+07:36 PM | Blu: You're very welcome! I'm here whenever you need assistance or have more questions.
+
+07:37 PM | Blu: Help Blu understand how they’re doing:
+
+07:37 PM | Blu: Rate your conversation
+
+07:37 PM | Huldar H: Blu, I'm trying to download the transcript of our conversation but I'm having issues with it.
+
+07:38 PM | Blu: I understand you're having issues downloading the transcript of our conversation. Currently, we don't have a direct feature for users to download chat transcripts themselves. 
+ If you're experiencing issues and need a copy of our conversation, the best approach is to contact our User Support team. You can do this through the chat session available in the bottom right corner of the page. Our team will be happy to assist you with your request. 
+ What specific reason do you need the transcript for? This would help me provide more targeted guidance. 
+ 
+
+07:39 PM | Huldar H: I need to download it to prove that I've asked you the questions I've already asked in case somebody wants to know in the future
+
+07:39 PM | Blu: Currently, we don't offer a direct feature for users to download chat transcripts themselves. To obtain a copy of your conversation with Blu, the best approach is to contact our User Support team through the chat session available in the bottom right corner of the page. 
+ When you connect with our support team, simply explain that you need a transcript of your previous conversations with Blu for documentation purposes. They'll be able to assist you with this request. 
+ What specific timeframe of conversations are you looking to document? This would help me provide more targeted guidance for your request. 
+
+
+07:39 PM | Huldar H: Talk to a person 👤
+
+07:39 PM | Blu: Sure! I will connect you with someone from our team. Meanwhile, could you please share more details about your issue so they have all the relevant information upfront?
+
+07:40 PM | Huldar H: Sure. You can also email me the transcript to my school email
+*EMAIL ADDRESS REMOVED FOR PRIVACY REASONS
+
+07:40 PM | Blu: To ensure that we can get back to you, please provide us with your contact e-mail address:
+
+07:40 PM | Blu: We'll be back online tomorrow
+You'll get replies here and to *EMAIL ADDRESS REMOVED FOR PRIVACY REASONS.
+
+07:41 PM | Huldar H: Great, thanks. Talk to you tomorrow.
+
+07:42 PM | Huldar H: Oh, also if it helps. I'm on firefox 139.0.1 (64-bit) and using windows 10
+
+---
+Exported from CopernicusMarineService on June 4, 2025 at 08:17 PM Paris time CEST (GMT+0200)

@@ -14,7 +14,9 @@
 //-------------------------------------------------------------------------------------------------------------------------
 use time;   // For start and end times
 use std::process::Command; // To run commands through the command line
-// use netcdf; // For working with and using the netcdf files retrieved from the copernicus server
+use netcdf; // For working with and using the netcdf files retrieved from the copernicus server
+// use zarrs; // For working with and using the .zarr files retrieved from the copernicus server
+// use pyo3;   // For calling python things
 
 
 // Enums
@@ -60,6 +62,9 @@ impl Copernicus {
             panic!("Minimum longitude must be less than or equal to maximum longitude");
         }
 
+        println!("Getting copernicus subset");
+
+        
         // Make argument
         let mut args: Vec<String> = vec![
             "subset".to_string(),
@@ -110,10 +115,17 @@ impl Copernicus {
         datestring.push('-');
         datestring.push_str(&start_datetime.day().to_string());
         filename.push_str(&datestring);
+        // filename.push_str(".zarr");
+
+        // Make filepath
+        let filepath = self.output_path.as_str().to_owned() + "/" + &filename;
+        println!("file path: {}", &filepath);
 
         // set output filename
         args.push("--output-filename".to_string());
         args.push(filename);
+
+        println!("Querying server");
         
         // Run the command to get the data
         let output = Command::new("copernicusmarine")
@@ -126,7 +138,26 @@ impl Copernicus {
         println!("Stderr: {}", String::from_utf8_lossy(&output.stderr));
 
         // Find the file where the data is stored
-        //let netcdf_file = netcdf::open(filename);
+        // Print hello with pyo3?
+        // pyo3::marker::Python::with_gil(|py| {
+        //     let s = c"print(\"Hello user, I'm Python\")";
+        //     py.run(s, None, None).expect("Well that didn't work");
+        // });
+
+        let netcdf_file = netcdf::open(filename);
+        println!("Netcdf file: {:?}", netcdf_file);
+        // Move into output path directory
+        // std::env::set_current_dir(std::path::Path::new(&self.output_path)).expect("Error changing directories");
+        // Print working directory
+        // println!("Changed directory to: {:?}", std::env::current_dir().expect("Could not get current directory"));
+        // Make zarr store
+        // let zarr_store: zarrs::storage::ReadableWritableListableStorage = std::sync::Arc::new(zarrs::storage::store::MemoryStore::new());
+        // let zarr_store: zarrs::filesystem::FilesystemStore = zarrs::filesystem::FilesystemStore::new(std::env::current_dir().expect("Could not get current dir")).expect("Could not make zarrs::filesystem::FilesystemStore");
+        // Make store key
+        // let store_key = zarrs::storage::StoreKey::new("eastward_wind").expect("Could not make store key");
+        // println!("Zarr store keys: {:?}", zarr_store.list());
+        // println!("Zarr store : {:?}", zarr_store);
+
 
         // Return the file
         return 5; //netcdf_file;
@@ -135,6 +166,8 @@ impl Copernicus {
 
 // Helper functions
 //-------------------------------------------------------------------------------------------------------------------------
+
+
 /// Writes the datetime variable to the "YYYY-MM-DDTHH:MM:SS" format where the 'T' is literally just a 'T'
 pub fn utc_date_time_to_copernicus_string(datetime: time::UtcDateTime) -> String {
     // Init empty string

@@ -151,8 +151,6 @@ dependencies = [
 [[package]]
 name = "netcdf"
 version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "377ebe63998547dd2a9713c91a42f229ac4e3fad56dd0a7385822421b882e0a5"
 dependencies = [
  "bitflags",
  "libc",
@@ -164,8 +162,6 @@ dependencies = [
 [[package]]
 name = "netcdf-sys"
 version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c631ed9272beb24e646964d52f1ce7a207f00e4ebc5d907527367fe703fe647"
 dependencies = [
  "hdf5-metno-sys",
  "libz-sys",

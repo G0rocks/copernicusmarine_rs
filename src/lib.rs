@@ -61,7 +61,7 @@ impl Copernicus {
             panic!("Minimum longitude must be less than or equal to maximum longitude");
         }
 
-        println!("Getting copernicus subset");
+        // println!("Getting copernicus subset");
 
         
         // Make argument
@@ -124,19 +124,19 @@ impl Copernicus {
         args.push("--output-filename".to_string());
         args.push(filename.clone());
 
-        println!("Querying server");
+        // println!("Querying server");
         // Run the command to get the data
         // Todo: If file alredy exists, overwrite or similar
-        let output = Command::new("copernicusmarine")
+        let _output = Command::new("copernicusmarine")
             .args(&args)
             .output()
             .expect("Failed to execute command \"copernicusmarine subset\" with the given arguments");
 
-        println!("Response saved");
+        // println!("Response saved");
 
-        // println!("Status: {}", output.status);
-        // println!("Stdout: {}", String::from_utf8_lossy(&output.stdout));
-        // println!("Stderr: {}", String::from_utf8_lossy(&output.stderr));
+        // println!("Status: {}", _output.status);
+        // println!("Stdout: {}", String::from_utf8_lossy(&_output.stdout));
+        // println!("Stderr: {}", String::from_utf8_lossy(&_output.stderr));
 
         // Move into output path directory
         let start_dir = std::env::current_dir().expect("Could not get current directory");

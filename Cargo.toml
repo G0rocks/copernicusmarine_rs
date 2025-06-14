@@ -2,9 +2,14 @@
 name = "copernicusmarine_rs"
 version = "0.1.0"
 edition = "2024"
+license = "GPL-3.0-or-later"
+description = "A Rust library (wrapper) for accessing data from Copernicus marine using the copernicus-marine-toolbox."
+repository = "https://github.com/G0rocks/copernicusmarine_rs"
+categories = ["science::geo", "api-bindings"]
+keywords = ["Copernicus", "Meteorological", "marine"]
+readme = "README.md"
 
 [dependencies]
-# Temporary direct path dependency for local development
 netcdf = "0.11.0"
 serde = "1.0.219"
 serde_json = "1.0.140"

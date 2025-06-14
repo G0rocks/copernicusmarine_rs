@@ -16,9 +16,6 @@ use time;   use core::panic;
 // For start and end times
 use std::process::Command; // To run commands through the command line
 use netcdf; // For working with and using the netcdf files retrieved from the copernicus server
-// use zarrs; // For working with and using the .zarr files retrieved from the copernicus server
-// use pyo3;   // For calling python things
-
 
 // Enums
 //-------------------------------------------------------------------------------------------------------------------------
@@ -43,7 +40,8 @@ impl Copernicus {
     }
 
     /// Function to get a subset from the copernicus database using the copernicus marine toolbox
-    /// This is the function you use to get some specific data
+    /// This is the function you use to get some specific data.
+    /// Note even though you put many variables, only the first variable is used in the file name
     pub fn subset(
         &self,
         dataset_id: String,
@@ -53,7 +51,7 @@ impl Copernicus {
         minimum_longitude: f64,
         maximum_longitude: f64,
         minimum_latitude: f64,
-        maximum_latitude: f64) -> u8 { //netcdf::File {
+        maximum_latitude: f64) -> netcdf::File {
 
         // Validate that minimum longitude and latitude is less or equal to maximum
         if minimum_latitude > maximum_latitude {
@@ -93,20 +91,22 @@ impl Copernicus {
         args.push(maximum_latitude.to_string());
         args.push("--output-directory".to_string());
         args.push(self.output_path.clone());
+        args.push("--overwrite".to_string());   // To overwrite file if it already exists to conserve computer space
+        
         
         // File name
         let mut filename = String::new();
-        filename.push_str(&dataset_id);
+        filename.push_str(&string_first_n_chars(dataset_id, 5));
         filename.push('_');
         filename.push_str(&variables[0]);
         filename.push('_');
-        filename.push_str(&minimum_latitude.to_string());
+        filename.push_str(&string_first_n_chars(minimum_latitude.to_string(), 5));
         filename.push('_');
-        filename.push_str(&maximum_latitude.to_string());
+        filename.push_str(&string_first_n_chars(maximum_latitude.to_string(), 5));
         filename.push('_');
-        filename.push_str(&minimum_longitude.to_string());
+        filename.push_str(&string_first_n_chars(minimum_longitude.to_string(), 5));
         filename.push('_');
-        filename.push_str(&maximum_longitude.to_string());
+        filename.push_str(&&string_first_n_chars(maximum_longitude.to_string(), 5));
         filename.push('_');
 
         // Date for filename
@@ -116,21 +116,23 @@ impl Copernicus {
         datestring.push('-');
         datestring.push_str(&start_datetime.day().to_string());
         filename.push_str(&datestring);
-        // filename.push_str(".zarr");
 
         // Make filepath
-        let filepath = self.output_path.as_str().to_owned() + "/" + &filename;
+        // let filepath = self.output_path.as_str().to_owned() + "/" + &filename;
 
         // set output filename
         args.push("--output-filename".to_string());
         args.push(filename.clone());
 
-        // println!("Querying server");        
+        println!("Querying server");
         // Run the command to get the data
+        // Todo: If file alredy exists, overwrite or similar
         let output = Command::new("copernicusmarine")
             .args(&args)
             .output()
             .expect("Failed to execute command \"copernicusmarine subset\" with the given arguments");
+
+        println!("Response saved");
 
         // println!("Status: {}", output.status);
         // println!("Stdout: {}", String::from_utf8_lossy(&output.stdout));
@@ -142,53 +144,31 @@ impl Copernicus {
         // Find the file where the data is stored
         let nc_filename = filename.as_str().to_owned() + ".nc";
 
-        let netcdf_file = netcdf::open(nc_filename.clone()).expect(format!("Could not get netcdf file: {}", &nc_filename).as_str());
-        let netcdf_root =  netcdf_file.root().expect("Lol nope");
-
-        // Get values from netcdf file
-        let time_stamp = netcdf_root.variable("time").expect("No variable: time");
-        let lat = netcdf_root.variable("latitude").expect("No variable: latitude");
-        let lon = netcdf_root.variable("longitude").expect("No variable: longitude");
-        let east = netcdf_root.variable("eastward_wind").expect("No variable: eastward_wind");
-        // let north = root.variable("northward_wind").expect("No northward_wind var");
-        // println!("east wind: {:?}", east);
-
-        let time_data: Vec<i64> = time_stamp.get_values(netcdf::Extents::All).expect("Failed to read time stamps");
-        let lat_data: Vec<f64> = lat.get_values(netcdf::Extents::All).expect("Failed to read latitude");
-        let lon_data: Vec<f64> = lon.get_values(netcdf::Extents::All).expect("Failed to read latitude");
-        let east_data: Vec<f32> = east.get_values(netcdf::Extents::All).expect("Failed to read eastward wind");
-        // let north_data: Vec<f32> = north.values::<f32>(None, None).expect("Failed to read northward wind");
-        println!("Timestamp: {:?}", secs_since_1990_01_01_0_to_utcdatetime(time_data[0]));
-        println!("Latitude: {:?}", lat_data[0]);
-        println!("Longitude: {:?}", lon_data[0]);
-        println!("Latitude: {:?}", lat_data[1]);
-        println!("Longitude: {:?}", lon_data[1]);
-        println!("Latitude: {:?}", lat_data[2]);
-        println!("Longitude: {:?}", lon_data[2]);
-        println!("east wind: {:?}", east_data[0]);
-        println!("east wind: {:?}", east_data[1]);
-        
-
-        // Make zarr store
-        // let zarr_store: zarrs::storage::ReadableWritableListableStorage = std::sync::Arc::new(zarrs::storage::store::MemoryStore::new());
-        // let zarr_store: zarrs::filesystem::FilesystemStore = zarrs::filesystem::FilesystemStore::new(std::env::current_dir().expect("Could not get current dir")).expect("Could not make zarrs::filesystem::FilesystemStore");
-        // Make store key
-        // let store_key = zarrs::storage::StoreKey::new("eastward_wind").expect("Could not make store key");
-        // println!("Zarr store keys: {:?}", zarr_store.list());
-        // println!("Zarr store : {:?}", zarr_store);
-
-        panic!("Stop run");
+        // Get netcdf root for netcdf file
+        let netcdf_file = netcdf::open(nc_filename.clone()).expect(format!("Could not get netcdf file: {}", &nc_filename).as_str());        
 
         // Move back into starting directory
         std::env::set_current_dir(start_dir).expect("Error changing directories");
 
-        // Return the file
-        return 5; //netcdf_file;
+        // Return file
+        return netcdf_file;
     }
 }
 
 // Helper functions
 //-------------------------------------------------------------------------------------------------------------------------
+/// Returns a substring of the first 5 characters of a string if there are more than 5 characters, otherwise returns the whole string
+pub fn string_first_n_chars(string_in: String, num_chars: usize) -> String {
+    // Get first 5 characters
+    if string_in.chars().count() > num_chars {
+        return string_in[..num_chars].to_string();
+    }
+    // Otherwise return whole input string
+    return string_in;
+}
+
+
+
 /// Makes the seconds since 1990-01-01 00:00:00 into a time::UtcdDateTime value
 /// Since according to datasheet the time is measured in seconds since that date: https://documentation.marine.copernicus.eu/PUM/CMEMS-WIND-PUM-012-004-006.pdf
 pub fn secs_since_1990_01_01_0_to_utcdatetime(secs: i64) -> time::UtcDateTime {

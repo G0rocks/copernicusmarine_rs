@@ -145,7 +145,7 @@ impl Copernicus {
         let nc_filename = filename.as_str().to_owned() + ".nc";
 
         // Get netcdf root for netcdf file
-        let netcdf_file = netcdf::open(nc_filename.clone()).expect(format!("Could not get netcdf file: {}", &nc_filename).as_str());        
+        let netcdf_file = netcdf::open(nc_filename.clone()).expect(format!("Could not get netcdf file:\n{}", &nc_filename).as_str());        
 
         // Move back into starting directory
         std::env::set_current_dir(start_dir).expect("Error changing directories");

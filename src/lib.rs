@@ -130,7 +130,7 @@ impl Copernicus {
         let _output = Command::new("copernicusmarine")
             .args(&args)
             .output()
-            .expect("Failed to execute command \"copernicusmarine subset\" with the given arguments");
+            .expect(format!("Failed to execute the given command\ncopernicusmarine with arguments: {:?}", args).as_str());
 
         // println!("Response saved");
 
@@ -153,6 +153,7 @@ impl Copernicus {
         // Return file
         return netcdf_file;
     }
+
 }
 
 // Helper functions

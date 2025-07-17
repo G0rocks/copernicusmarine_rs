@@ -12,9 +12,9 @@
 
 // Dependencies
 //-------------------------------------------------------------------------------------------------------------------------
-use time;   use core::panic;
-// For start and end times
-use std::process::Command; // To run commands through the command line
+use time;   // For start and end times
+use core::panic;    // For panicking when something goes wrong
+use std::{os::windows::process::ExitStatusExt, process::Command}; // To run commands through the command line
 use netcdf; // For working with and using the netcdf files retrieved from the copernicus server
 
 // Enums
@@ -84,7 +84,7 @@ impl Copernicus {
         args.push("--minimum-longitude".to_string());
         args.push(minimum_longitude.to_string());
         args.push("--maximum-longitude".to_string());
-        args.push(maximum_longitude.to_string());
+        args.push(5000.to_string());
         args.push("--minimum-latitude".to_string());
         args.push(minimum_latitude.to_string());
         args.push("--maximum-latitude".to_string());
@@ -125,16 +125,40 @@ impl Copernicus {
         args.push(filename.clone());
 
         // println!("Querying server");
-        // Run the command to get the data
+        // Run the command to query server for the data
+        // If fails, retry 2 more times
         // Todo: If file alredy exists, overwrite or similar
-        let _output = Command::new("copernicusmarine")
-            .args(&args)
-            .output()
-            .expect(format!("Failed to execute the given command\ncopernicusmarine with arguments: {:?}", args).as_str());
+        // Init output so it exists outside of the for loop
+        let mut output: std::process::Output = std::process::Output {
+            status: std::process::ExitStatus::from_raw(100),
+            stdout: vec![],
+            stderr: vec!["Initialzed output for copernicusmarine toolbox subset command. If you see this something went wrong in an unpredicted way.".as_bytes().to_vec()].concat(),
+        };
+        for i in 0..3 {
+            // Running command
+            let start_time = time::UtcDateTime::now();
+            output = Command::new("copernicusmarine")
+                .args(&args)
+                .output()
+                .expect(format!("Failed to execute the given command\ncopernicusmarine with arguments: {:?}", args).as_str());
 
-        // println!("Response saved");
+            // Get exit code, if no exit code, set to -1 and assume failure
+            let exit_code = match output.status.code() {
+                Some(code) => code,
+                None => -1,
+            };
 
-        // println!("Status: {}", _output.status);
+            // If the command was successful, break the loop
+            if exit_code == 0 {
+                break;
+            }
+            let end_time = time::UtcDateTime::now();
+            let duration = end_time - start_time;
+            // Print error message
+            println!("Error getting data from copernicusmarine toolbox subset command, attempt {}/3. Exit code: {}. Query finished in {:?}", i+1, exit_code, duration);
+        }
+
+        // println!("Status: {}", _output.status.code().unwrap());
         // println!("Stdout: {}", String::from_utf8_lossy(&_output.stdout));
         // println!("Stderr: {}", String::from_utf8_lossy(&_output.stderr));
 
@@ -145,7 +169,7 @@ impl Copernicus {
         let nc_filename = filename.as_str().to_owned() + ".nc";
 
         // Get netcdf root for netcdf file
-        let netcdf_file = netcdf::open(nc_filename.clone()).expect(format!("Could not get netcdf file:\n{}", &nc_filename).as_str());        
+        let netcdf_file = netcdf::open(nc_filename.clone()).expect(format!("Could not get netcdf file:\n{}\ncopernicusmarinetoolbox subset error {}", &nc_filename, String::from_utf8_lossy(&output.stderr)).as_str());
 
         // Move back into starting directory
         std::env::set_current_dir(start_dir).expect("Error changing directories");

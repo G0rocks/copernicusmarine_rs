@@ -14,7 +14,14 @@
 //-------------------------------------------------------------------------------------------------------------------------
 use time;   // For start and end times
 use core::panic;    // For panicking when something goes wrong
-use std::{os::windows::process::ExitStatusExt, process::Command}; // To run commands through the command line
+// If windows
+#[cfg(target_os = "windows")]
+use std::os::windows::process::ExitStatusExt; // To get exit code from the command
+// If unix
+#[cfg(target_os = "linux")]
+use std::os::unix::process::ExitStatusExt; // To get exit code from
+
+use std::process::Command; // To run commands through the command line
 use netcdf; // For working with and using the netcdf files retrieved from the copernicus server
 
 // Enums

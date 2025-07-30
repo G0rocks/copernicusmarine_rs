@@ -16,13 +16,18 @@ use time;   // For start and end times
 use core::panic;    // For panicking when something goes wrong
 // If windows
 #[cfg(target_os = "windows")]
-use std::os::windows::process::ExitStatusExt; // To get exit code from the command
+use std::os::windows::process::ExitStatusExt; // To get exit code from commands
 // If unix
 #[cfg(target_os = "linux")]
-use std::os::unix::process::ExitStatusExt; // To get exit code from
+use std::os::unix::process::ExitStatusExt; // To get exit code from commands
 
 use std::process::Command; // To run commands through the command line
 use netcdf; // For working with and using the netcdf files retrieved from the copernicus server
+
+// Definitions
+//-------------------------------------------------------------------------------------------------------------------------
+/// Maximum number of attempts to get data from the copernicus marine servers
+const MAX_ATTEMPTS: u8 = 100;
 
 // Enums
 //-------------------------------------------------------------------------------------------------------------------------
@@ -141,7 +146,7 @@ impl Copernicus {
             stdout: vec![],
             stderr: vec!["Initialzed output for copernicusmarine toolbox subset command. If you see this something went wrong in an unpredicted way.".as_bytes().to_vec()].concat(),
         };
-        for i in 0..3 {
+        for i in 0..MAX_ATTEMPTS {
             // Running command
             let start_time = time::UtcDateTime::now();
             output = Command::new("copernicusmarine")
@@ -162,7 +167,11 @@ impl Copernicus {
             let end_time = time::UtcDateTime::now();
             let duration = end_time - start_time;
             // Print error message
-            println!("Error getting data from copernicusmarine toolbox subset command, attempt {}/3. Exit code: {}. Query finished in {:?}", i+1, exit_code, duration);
+            let wait_time_mins = 1;
+            println!("Error getting data from copernicusmarine toolbox subset command, attempt {}/{}. Exit code: {}. Query finished in {:?}", i+1, MAX_ATTEMPTS, exit_code, duration);
+
+            // Before trying again, wait 1 minute as per instructions from the devs: https://github.com/mercator-ocean/copernicus-marine-toolbox/issues/392#issuecomment-3136220183
+            println!("Waiting {} minutes before trying again...", wait_time_mins);
         }
 
         // println!("Status: {}", _output.status.code().unwrap());

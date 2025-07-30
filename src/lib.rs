@@ -13,6 +13,7 @@
 // Dependencies
 //-------------------------------------------------------------------------------------------------------------------------
 use time;   // For start and end times
+use std::thread; // For sleeping between attempts to get data from the copernicus marine servers
 use core::panic;    // For panicking when something goes wrong
 // If windows
 #[cfg(target_os = "windows")]
@@ -167,11 +168,11 @@ impl Copernicus {
             let end_time = time::UtcDateTime::now();
             let duration = end_time - start_time;
             // Print error message
-            let wait_time_mins = 1;
             println!("Error getting data from copernicusmarine toolbox subset command, attempt {}/{}. Exit code: {}. Query finished in {:?}", i+1, MAX_ATTEMPTS, exit_code, duration);
 
             // Before trying again, wait 1 minute as per instructions from the devs: https://github.com/mercator-ocean/copernicus-marine-toolbox/issues/392#issuecomment-3136220183
-            println!("Waiting {} minutes before trying again...", wait_time_mins);
+            println!("Waiting 1 minute before trying again...");
+            thread::sleep(std::time::Duration::from_secs(60));
         }
 
         // println!("Status: {}", _output.status.code().unwrap());

@@ -28,7 +28,7 @@ use netcdf; // For working with and using the netcdf files retrieved from the co
 // Definitions
 //-------------------------------------------------------------------------------------------------------------------------
 /// Maximum number of attempts to get data from the copernicus marine servers
-const MAX_ATTEMPTS: u8 = 1000;
+const MAX_ATTEMPTS: u16 = 1000;
 
 // Enums
 //-------------------------------------------------------------------------------------------------------------------------
@@ -91,9 +91,9 @@ impl Copernicus {
         }
 
         args.push("--start-datetime".to_string());
-        args.push(utc_date_time_to_copernicus_string(start_datetime));
+        args.push(utc_date_time_to_string(start_datetime));
         args.push("--end-datetime".to_string());
-        args.push(utc_date_time_to_copernicus_string(end_datetime));
+        args.push(utc_date_time_to_string(end_datetime));
         args.push("--minimum-longitude".to_string());
         args.push(minimum_longitude.to_string());
         args.push("--maximum-longitude".to_string());
@@ -223,13 +223,15 @@ pub fn secs_since_1990_01_01_0_to_utcdatetime(secs: i64) -> time::UtcDateTime {
 
 
 /// Writes the datetime variable to the "YYYY-MM-DDTHH:MM:SS" format where the 'T' is literally just a 'T'
-pub fn utc_date_time_to_copernicus_string(datetime: time::UtcDateTime) -> String {
+pub fn utc_date_time_to_string(datetime: time::UtcDateTime) -> String {
     // Init empty string
     let mut out_string = String::new();
 
     // Assemble string in correct format
     out_string = out_string + &datetime.year().to_string();
     out_string.push_str("-");
+    // If month is less than 10, add a leading zero
+    out_string.push_str("0");
     out_string = out_string + &datetime.month().to_string();
     out_string.push_str("-");
     out_string = out_string + &datetime.day().to_string();

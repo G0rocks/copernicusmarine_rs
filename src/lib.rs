@@ -28,7 +28,7 @@ use netcdf; // For working with and using the netcdf files retrieved from the co
 // Definitions
 //-------------------------------------------------------------------------------------------------------------------------
 /// Maximum number of attempts to get data from the copernicus marine servers
-const MAX_ATTEMPTS: u8 = 100;
+const MAX_ATTEMPTS: u8 = 1000;
 
 // Enums
 //-------------------------------------------------------------------------------------------------------------------------

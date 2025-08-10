@@ -28,7 +28,7 @@ use netcdf; // For working with and using the netcdf files retrieved from the co
 // Definitions
 //-------------------------------------------------------------------------------------------------------------------------
 /// Maximum number of attempts to get data from the copernicus marine servers
-const MAX_ATTEMPTS: u16 = 1000;
+// const MAX_ATTEMPTS: u16 = 1000;
 
 // Enums
 //-------------------------------------------------------------------------------------------------------------------------
@@ -141,13 +141,16 @@ impl Copernicus {
         // Run the command to query server for the data
         // If fails, retry 2 more times
         // Todo: If file alredy exists, overwrite or similar
-        // Init output so it exists outside of the for loop
+        // Init output so it exists outside of the loop
         let mut output: std::process::Output = std::process::Output {
             status: std::process::ExitStatus::from_raw(100),
             stdout: vec![],
             stderr: vec!["Initialzed output for copernicusmarine toolbox subset command. If you see this something went wrong in an unpredicted way.".as_bytes().to_vec()].concat(),
         };
-        for i in 0..MAX_ATTEMPTS {
+        let mut attempt_counter = 0;
+        loop {
+            attempt_counter += 1;
+        // for i in 0..MAX_ATTEMPTS {
             // Running command
             let start_time = time::UtcDateTime::now();
             output = Command::new("copernicusmarine")
@@ -168,11 +171,12 @@ impl Copernicus {
             let end_time = time::UtcDateTime::now();
             let duration = end_time - start_time;
             // Print error message
-            println!("Error getting data from copernicusmarine toolbox subset command, attempt {}/{}. Exit code: {}. Query finished in {:?}", i+1, MAX_ATTEMPTS, exit_code, duration);
+            println!("Error getting data from copernicusmarine toolbox subset command, attempt {}. Exit code: {}. Query finished in {:?}", attempt_counter, exit_code, duration);
+            // println!("Error getting data from copernicusmarine toolbox subset command, attempt {}/{}. Exit code: {}. Query finished in {:?}", i+1, MAX_ATTEMPTS, exit_code, duration);
 
             // Before trying again, wait 1 minute as per instructions from the devs: https://github.com/mercator-ocean/copernicus-marine-toolbox/issues/392#issuecomment-3136220183
-            println!("Waiting 1 minute before trying again...");
-            thread::sleep(std::time::Duration::from_secs(60));
+            println!("Waiting {} seconds before trying again...", 60 + attempt_counter);
+            thread::sleep(std::time::Duration::from_secs(60 + attempt_counter));
         }
 
         // println!("Status: {}", _output.status.code().unwrap());

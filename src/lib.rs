@@ -123,11 +123,7 @@ impl Copernicus {
         filename.push('_');
 
         // Date for filename
-        let mut datestring = start_datetime.year().to_string();
-        datestring.push('-');
-        datestring.push_str(&(start_datetime.month() as u8).to_string());
-        datestring.push('-');
-        datestring.push_str(&start_datetime.day().to_string());
+        let datestring = utc_date_time_to_string(start_datetime);
         filename.push_str(&datestring);
 
         // Make filepath
@@ -236,7 +232,7 @@ pub fn utc_date_time_to_string(datetime: time::UtcDateTime) -> String {
     out_string.push_str("-");
     // If month is less than 10, add a leading zero
     out_string.push_str("0");
-    out_string = out_string + &datetime.month().to_string();
+    out_string = out_string + &(datetime.month() as u8).to_string();
     out_string.push_str("-");
     out_string = out_string + &datetime.day().to_string();
     out_string.push_str("T");

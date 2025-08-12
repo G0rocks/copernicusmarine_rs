@@ -171,12 +171,12 @@ impl Copernicus {
             let end_time = time::UtcDateTime::now();
             let duration = end_time - start_time;
             // Print error message
-            println!("Error getting data from copernicusmarine toolbox subset command, attempt {}. Exit code: {}. Query finished in {:?}", attempt_counter, exit_code, duration);
+            println!("Error getting data from copernicusmarine toolbox subset command, attempt {}. Query finished in {:?}. Exit code: {}. Output message: {}", attempt_counter, duration, exit_code, String::from_utf8_lossy(&output.stderr));
             // println!("Error getting data from copernicusmarine toolbox subset command, attempt {}/{}. Exit code: {}. Query finished in {:?}", i+1, MAX_ATTEMPTS, exit_code, duration);
 
             // Before trying again, wait 1 minute as per instructions from the devs: https://github.com/mercator-ocean/copernicus-marine-toolbox/issues/392#issuecomment-3136220183
-            println!("Waiting {} seconds before trying again...", 60 + attempt_counter);
-            thread::sleep(std::time::Duration::from_secs(60 + attempt_counter));
+            println!("Waiting {} seconds before trying again...", attempt_counter);
+            thread::sleep(std::time::Duration::from_secs(attempt_counter));
         }
 
         // println!("Status: {}", _output.status.code().unwrap());

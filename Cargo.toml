@@ -1,6 +1,6 @@
 [package]
 name = "copernicusmarine_rs"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
 license = "GPL-3.0-or-later"
 description = "A Rust library (wrapper) for accessing data from Copernicus marine using the copernicus-marine-toolbox."

@@ -231,7 +231,9 @@ pub fn utc_date_time_to_string(datetime: time::UtcDateTime) -> String {
     out_string = out_string + &datetime.year().to_string();
     out_string.push_str("-");
     // If month is less than 10, add a leading zero
-    out_string.push_str("0");
+    if (datetime.month() as u8) < 10 {
+        out_string.push_str("0");
+    }
     out_string = out_string + &(datetime.month() as u8).to_string();
     out_string.push_str("-");
     out_string = out_string + &datetime.day().to_string();

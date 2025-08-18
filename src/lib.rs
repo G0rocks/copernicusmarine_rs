@@ -15,13 +15,6 @@
 use time;   // For start and end times
 use std::thread; // For sleeping between attempts to get data from the copernicus marine servers
 use core::panic;    // For panicking when something goes wrong
-// If windows
-#[cfg(target_os = "windows")]
-use std::os::windows::process::ExitStatusExt; // To get exit code from commands
-// If unix
-#[cfg(target_os = "linux")]
-use std::os::unix::process::ExitStatusExt; // To get exit code from commands
-
 use std::process::Command; // To run commands through the command line
 use netcdf; // For working with and using the netcdf files retrieved from the copernicus server
 
@@ -138,11 +131,8 @@ impl Copernicus {
         // If fails, retry 2 more times
         // Todo: If file alredy exists, overwrite or similar
         // Init output so it exists outside of the loop
-        let mut output: std::process::Output = std::process::Output {
-            status: std::process::ExitStatus::from_raw(100),
-            stdout: vec![],
-            stderr: vec!["Initialzed output for copernicusmarine toolbox subset command. If you see this something went wrong in an unpredicted way.".as_bytes().to_vec()].concat(),
-        };
+        let mut output: std::process::Output;
+
         let mut attempt_counter = 0;
         loop {
             attempt_counter += 1;

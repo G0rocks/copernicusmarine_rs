@@ -117,6 +117,7 @@ impl Copernicus {
 
         // Date for filename
         let datestring = utc_date_time_to_string(start_datetime);
+        let datestring = datestring.replace(":",""); // Remove colons from the date string to make it a valid filename
         filename.push_str(&datestring);
 
         // Make filepath

@@ -162,7 +162,7 @@ impl Copernicus {
             // println!("Error getting data from copernicusmarine toolbox subset command, attempt {}/{}. Exit code: {}. Query finished in {:?}", i+1, MAX_ATTEMPTS, exit_code, duration);
             // Assume if duration is shorter than 100 seconds that the error is not a timeout, but an error that will not be solved by trying again. Break the loop. 
             if duration < time::Duration::seconds(100) {
-                panic!("Error getting data from copernicusmarine toolbox subset command. Query finished in {:?} < 100 seconds so assume not a timeout and stopping program.\nExit code: {}. Output message: {}", duration, exit_code, String::from_utf8_lossy(&output.stderr));
+                panic!("Error getting data from copernicusmarine toolbox subset command. Query finished in {:?} < 100 seconds so assume not a timeout and stopping program.\nExit code: {}. Output message: {}\n\nQuery: copernicusmarine {:?}", duration, exit_code, String::from_utf8_lossy(&output.stderr), args);
             }
 
             // Before trying again, wait 1 minute as per instructions from the devs: https://github.com/mercator-ocean/copernicus-marine-toolbox/issues/392#issuecomment-3136220183

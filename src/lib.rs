@@ -193,80 +193,115 @@ impl Copernicus {
     ///
     /// # Arguments
     ///
-    /// * `variable` - The variable within the dataset that is asked for
+    /// * `variables` - A vector with the variables within the dataset that are being asked for
     ///
+    /// Returns a vector of vectors, the first vector contains the data for the first variable and so on and so forth
     pub fn get_f64_values(&self,
         dataset_id: String,
-        variable: &str,
+        variables: Vec<String>,
         start_datetime: time::UtcDateTime,
         end_datetime: time::UtcDateTime,
         minimum_longitude: f64,
         maximum_longitude: f64,
         minimum_latitude: f64,
-        maximum_latitude: f64) -> Result<Vec<f64>, io::Error> {
+        maximum_latitude: f64) -> Result<Vec<Vec<f64>>, io::Error> {
 
         // Get netcdf file from Copernicus
-        let netcdf_file = self.subset(dataset_id.clone(), vec![variable.to_string()], start_datetime, end_datetime, minimum_longitude, maximum_longitude, minimum_latitude, maximum_latitude);
+        let netcdf_file = self.subset(dataset_id.clone(), variables.clone(), start_datetime, end_datetime, minimum_longitude, maximum_longitude, minimum_latitude, maximum_latitude);
 
         // Get netcdf root from netcdf file
         let netcdf_root =  netcdf_file.root().expect("Could not get netcdf root from netcdf file");
 
-        // Get netcdf_variables from netcdf root
-        let netcdf_variable = netcdf_root.variable(variable).expect(format!("No variable '{}' found in dataset '{}'", variable, dataset_id).as_str());
+        // Init data vectors
+        let mut data_vectors = Vec::new();
 
-        // Get data vectors from variables
-        let mut data_vector: Vec<f64> = netcdf_variable.get_values(netcdf::Extents::All).expect("Failed to read eastward wind");
+        // Get the data for each variable
+        for variable in variables {
+            // Get netcdf_variables from netcdf root
+            let netcdf_variable = netcdf_root.variable(variable.as_str()).expect(format!("No variable '{}' found in dataset '{}'", variable, dataset_id).as_str());
 
-        // Check if a fill value attribute exists
-        let fill_value_attr_option = netcdf_variable.attribute("fill_value");
-        if fill_value_attr_option.is_some() {
-            // Get fill value
-            let fill_value_attr_val = fill_value_attr_option.unwrap().value().expect("Could not get fill value");
-            let fill_value = match fill_value_attr_val {
-                netcdf::AttributeValue::Double(v) => v as f64,
-                _ => panic!("fill_value was not a Double"),
-            };
+            // Get data vectors from variables
+            let mut data_vector: Vec<f64> = netcdf_variable.get_values(netcdf::Extents::All).expect("Failed to read eastward wind");
 
-            // Check if any of the data is the fill value, if it is, return an error
-            for i in 0..data_vector.len() {
-                if data_vector[i] == fill_value {
-                    return Err(io::Error::new(io::ErrorKind::InvalidData, format!("Fill value error for variable: {}. See entry {} in {:?}", variable, i.to_string(), data_vector[i])));
+            // Check if a fill value attribute exists
+            let fill_value_attr_option = netcdf_variable.attribute("fill_value");
+            if fill_value_attr_option.is_some() {
+                // Get fill value
+                let fill_value_attr_val = fill_value_attr_option.unwrap().value().expect("Could not get fill value");
+                let fill_value = match fill_value_attr_val {
+                    netcdf::AttributeValue::Double(v) => v as f64,
+                    _ => panic!("fill_value was not a Double"),
+                };
+
+                // Check if any of the data is the fill value, if it is, return an error
+                for i in 0..data_vector.len() {
+                    if data_vector[i] == fill_value {
+                        return Err(io::Error::new(io::ErrorKind::InvalidData, format!("Fill value error for variable: {}. See entry {} in {:?}", variable, i.to_string(), data_vector[i])));
+                    }
                 }
-            }
-        }   // End if
+            }   // End if
 
-        // Check if a scale factor attribute exists
-        let scale_factor_attr_option = netcdf_variable.attribute("scale_factor");
-        if scale_factor_attr_option.is_some() {
-            // get scale factor
-            let scale_factor_attr_val = scale_factor_attr_option.unwrap().value().expect("Could not get scale factor value");
-            let scale_factor = match scale_factor_attr_val {
-                netcdf::AttributeValue::Double(v) => v as f64,
-                _ => panic!("scale_factor was not a Double"),
-            };
-            // Scale data
-            for i in 0..data_vector.len() {
-                data_vector[i] = data_vector[i]*scale_factor;
-            }
-        }   // End if
+            // Check if a scale factor attribute exists
+            let scale_factor_attr_option = netcdf_variable.attribute("scale_factor");
+            if scale_factor_attr_option.is_some() {
+                // get scale factor
+                let scale_factor_attr_val = scale_factor_attr_option.unwrap().value().expect("Could not get scale factor value");
+                let scale_factor = match scale_factor_attr_val {
+                    netcdf::AttributeValue::Double(v) => v as f64,
+                    _ => panic!("scale_factor was not a Double"),
+                };
+                // Scale data
+                for i in 0..data_vector.len() {
+                    data_vector[i] = data_vector[i]*scale_factor;
+                }
+            }   // End if
 
-        // Check if a scale factor attribute exists
-        let add_offset_attr_option = netcdf_variable.attribute("add_offset");
-        if add_offset_attr_option.is_some() {
-            // get add offset
-            let add_offset_attr_val = add_offset_attr_option.unwrap().value().expect("Could not get add_offset value");
-            let add_offset = match add_offset_attr_val {
-                netcdf::AttributeValue::Double(v) => v as f64,
-                _ => panic!("add_offset was not a Double"),
-            };
-            // Offset data
-            for i in 0..data_vector.len() {
-                data_vector[i] = data_vector[i] + add_offset;
-            }
-        }   // End if
+            // Check if a scale factor attribute exists
+            let add_offset_attr_option = netcdf_variable.attribute("add_offset");
+            if add_offset_attr_option.is_some() {
+                // get add offset
+                let add_offset_attr_val = add_offset_attr_option.unwrap().value().expect("Could not get add_offset value");
+                let add_offset = match add_offset_attr_val {
+                    netcdf::AttributeValue::Double(v) => v as f64,
+                    _ => panic!("add_offset was not a Double"),
+                };
+                // Offset data
+                for i in 0..data_vector.len() {
+                    data_vector[i] = data_vector[i] + add_offset;
+                }
+            }   // End if
+
+            // Add data_vector to data_vectors
+            data_vectors.push(data_vector);
+        } // End for
+
+        // TODO: Try to delete downloaded file before leaving directory to conserve available storage space on computer
+        println!("Trying to delete downloaded file potentially if you want? Copernicus get_f64_values() function");
+        // Copy netcdf_file name
+        //let wind_filename = wind_netcdf_file.path().expect("Could not get netcdf file path").clone();
+        //// Stop using netcdf_file so it can be deleted
+        //wind_netcdf_file.close().expect("Could not close netcdf file");
+        //// Move into output path directory
+        //let start_dir = std::env::current_dir().expect("Could not get current directory");
+        //// Change directory
+        //std::env::set_current_dir(std::path::Path::new(&simulation.copernicus.clone().unwrap().output_path)).expect("Error changing directories");
+        //// Try to delete the file
+        //match std::fs::remove_file(&wind_filename) {
+        //    Ok(_) => {}
+        //    Err(e) => {
+        //        println!("Could not delete file {:?}: {}", &wind_filename, e);
+        //            let f = std::fs::File::open(wind_filename)?;
+        //            let metadata = f.metadata().expect("Oh no, NO METADATA FOUND!");
+        //            let permissions = metadata.permissions();
+        //        println!("Permissions: {:?}", permissions);
+        //    }
+        //}
+
+        // Move back into directory
+        // std::env::set_current_dir(start_dir).expect("Error changing directories");
 
         // Return data_vector after scaling and offseting
-        return Ok(data_vector);
+        return Ok(data_vectors);
     }
 
 }

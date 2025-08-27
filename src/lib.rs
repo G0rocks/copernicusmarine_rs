@@ -4,12 +4,6 @@
 /// Description
 /// Enables the use of copernicus marine toolbox through rust
 
-// Todo
-//-------------------------------------------------------------------------------------------------------------------------
-// 1. Add way to chose where the files are stored and fetched. Use absolute or relative path
-
-
-
 // Dependencies
 //-------------------------------------------------------------------------------------------------------------------------
 use time;   // For start and end times
@@ -17,6 +11,7 @@ use std::thread; // For sleeping between attempts to get data from the copernicu
 use core::panic;    // For panicking when something goes wrong
 use std::process::Command; // To run commands through the command line
 use netcdf; // For working with and using the netcdf files retrieved from the copernicus server
+use std::{io}; // To use errors
 
 // Definitions
 //-------------------------------------------------------------------------------------------------------------------------
@@ -136,8 +131,6 @@ impl Copernicus {
 
         let mut attempt_counter = 0;
         loop {
-            attempt_counter += 1;
-        // for i in 0..MAX_ATTEMPTS {
             // Running command
             let start_time = time::UtcDateTime::now();
             output = Command::new("copernicusmarine")
@@ -168,6 +161,9 @@ impl Copernicus {
             // Before trying again, wait 1 minute as per instructions from the devs: https://github.com/mercator-ocean/copernicus-marine-toolbox/issues/392#issuecomment-3136220183
             println!("Waiting {} seconds before trying again...", attempt_counter);
             thread::sleep(std::time::Duration::from_secs(attempt_counter));
+
+            // Increment attempt_counter
+            attempt_counter += 1;
         }
 
         // println!("Status: {}", _output.status.code().unwrap());
@@ -188,6 +184,89 @@ impl Copernicus {
 
         // Return file
         return netcdf_file;
+    }
+
+    /// Function that asks the copernicus marine server for data using the subset command and automatically scales and offsets the value
+    /// If the returned values contain a fillvalue, then returns an error
+    /// Only uses scale_factor, add_offset and fill_value if they exist, otherwise not.
+    /// If you have problems with this command, consider using the subset command directly
+    ///
+    /// # Arguments
+    ///
+    /// * `variable` - The variable within the dataset that is asked for
+    ///
+    pub fn get_f64_values(&self,
+        dataset_id: String,
+        variable: &str,
+        start_datetime: time::UtcDateTime,
+        end_datetime: time::UtcDateTime,
+        minimum_longitude: f64,
+        maximum_longitude: f64,
+        minimum_latitude: f64,
+        maximum_latitude: f64) -> Result<Vec<f64>, io::Error> {
+
+        // Get netcdf file from Copernicus
+        let netcdf_file = self.subset(dataset_id.clone(), vec![variable.to_string()], start_datetime, end_datetime, minimum_longitude, maximum_longitude, minimum_latitude, maximum_latitude);
+
+        // Get netcdf root from netcdf file
+        let netcdf_root =  netcdf_file.root().expect("Could not get netcdf root from netcdf file");
+
+        // Get netcdf_variables from netcdf root
+        let netcdf_variable = netcdf_root.variable(variable).expect(format!("No variable '{}' found in dataset '{}'", variable, dataset_id).as_str());
+
+        // Get data vectors from variables
+        let mut data_vector: Vec<f64> = netcdf_variable.get_values(netcdf::Extents::All).expect("Failed to read eastward wind");
+
+        // Check if a fill value attribute exists
+        let fill_value_attr_option = netcdf_variable.attribute("fill_value");
+        if fill_value_attr_option.is_some() {
+            // Get fill value
+            let fill_value_attr_val = fill_value_attr_option.unwrap().value().expect("Could not get fill value");
+            let fill_value = match fill_value_attr_val {
+                netcdf::AttributeValue::Double(v) => v as f64,
+                _ => panic!("fill_value was not a Double"),
+            };
+
+            // Check if any of the data is the fill value, if it is, return an error
+            for i in 0..data_vector.len() {
+                if data_vector[i] == fill_value {
+                    return Err(io::Error::new(io::ErrorKind::InvalidData, format!("Fill value error for variable: {}. See entry {} in {:?}", variable, i.to_string(), data_vector[i])));
+                }
+            }
+        }   // End if
+
+        // Check if a scale factor attribute exists
+        let scale_factor_attr_option = netcdf_variable.attribute("scale_factor");
+        if scale_factor_attr_option.is_some() {
+            // get scale factor
+            let scale_factor_attr_val = scale_factor_attr_option.unwrap().value().expect("Could not get scale factor value");
+            let scale_factor = match scale_factor_attr_val {
+                netcdf::AttributeValue::Double(v) => v as f64,
+                _ => panic!("scale_factor was not a Double"),
+            };
+            // Scale data
+            for i in 0..data_vector.len() {
+                data_vector[i] = data_vector[i]*scale_factor;
+            }
+        }   // End if
+
+        // Check if a scale factor attribute exists
+        let add_offset_attr_option = netcdf_variable.attribute("add_offset");
+        if add_offset_attr_option.is_some() {
+            // get add offset
+            let add_offset_attr_val = add_offset_attr_option.unwrap().value().expect("Could not get add_offset value");
+            let add_offset = match add_offset_attr_val {
+                netcdf::AttributeValue::Double(v) => v as f64,
+                _ => panic!("add_offset was not a Double"),
+            };
+            // Offset data
+            for i in 0..data_vector.len() {
+                data_vector[i] = data_vector[i] + add_offset;
+            }
+        }   // End if
+
+        // Return data_vector after scaling and offseting
+        return Ok(data_vector);
     }
 
 }

@@ -90,7 +90,7 @@ impl Copernicus {
         args.push("--minimum-longitude".to_string());
         args.push(minimum_longitude.to_string());
         args.push("--maximum-longitude".to_string());
-        args.push(5000.to_string());
+        args.push(minimum_longitude.to_string());
         args.push("--minimum-latitude".to_string());
         args.push(minimum_latitude.to_string());
         args.push("--maximum-latitude".to_string());

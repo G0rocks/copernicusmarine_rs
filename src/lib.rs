@@ -52,7 +52,9 @@ impl Copernicus {
         minimum_longitude: f64,
         maximum_longitude: f64,
         minimum_latitude: f64,
-        maximum_latitude: f64) -> netcdf::File {
+        maximum_latitude: f64,
+        minimum_depth:  Option<f64>,
+        maximum_depth:  Option<f64>) -> netcdf::File {
 
         // Validate that minimum longitude and latitude is less or equal to maximum
         if minimum_latitude > maximum_latitude {
@@ -62,9 +64,6 @@ impl Copernicus {
             panic!("Minimum longitude must be less than or equal to maximum longitude");
         }
 
-        // println!("Getting copernicus subset");
-
-        
         // Make argument
         let mut args: Vec<String> = vec![
             "subset".to_string(),
@@ -78,6 +77,7 @@ impl Copernicus {
             args.push(variable);
         }
 
+        // Add all arguments to the args vector
         args.push("--start-datetime".to_string());
         args.push(utc_date_time_to_string(start_datetime));
         args.push("--end-datetime".to_string());
@@ -90,6 +90,16 @@ impl Copernicus {
         args.push(minimum_latitude.to_string());
         args.push("--maximum-latitude".to_string());
         args.push(maximum_latitude.to_string());
+        // If minimum_depth is specified, add minimum_depth argument
+        if minimum_depth.is_some() {
+            args.push("--minimum-depth".to_string());
+            args.push(minimum_depth.unwrap().to_string());
+        }
+        // If minimum_depth is specified, add minimum_depth argument
+        if maximum_depth.is_some() {
+            args.push("--maximum-depth".to_string());
+            args.push(maximum_depth.unwrap().to_string());
+        }
         args.push("--output-directory".to_string());
         args.push(self.output_path.clone());
         args.push("--overwrite".to_string());   // To overwrite file if it already exists to conserve computer space
@@ -166,6 +176,7 @@ impl Copernicus {
             attempt_counter += 1;
         }
 
+        // Debugging prints
         // println!("Status: {}", _output.status.code().unwrap());
         // println!("Stdout: {}", String::from_utf8_lossy(&_output.stdout));
         // println!("Stderr: {}", String::from_utf8_lossy(&_output.stderr));
@@ -204,10 +215,12 @@ impl Copernicus {
         minimum_longitude: f64,
         maximum_longitude: f64,
         minimum_latitude: f64,
-        maximum_latitude: f64) -> Result<Vec<Vec<f64>>, io::Error> {
+        maximum_latitude: f64,
+        minimum_depth:  Option<f64>,
+        maximum_depth:  Option<f64>,) -> Result<Vec<Vec<f64>>, io::Error> {
 
         // Get netcdf file from Copernicus
-        let netcdf_file = self.subset(dataset_id.clone(), variables.clone(), start_datetime, end_datetime, minimum_longitude, maximum_longitude, minimum_latitude, maximum_latitude);
+        let netcdf_file = self.subset(dataset_id.clone(), variables.clone(), start_datetime, end_datetime, minimum_longitude, maximum_longitude, minimum_latitude, maximum_latitude, minimum_depth, maximum_depth);
 
         // Get netcdf root from netcdf file
         let netcdf_root =  netcdf_file.root().expect("Could not get netcdf root from netcdf file");
@@ -276,7 +289,6 @@ impl Copernicus {
         } // End for
 
         // TODO: Try to delete downloaded file before leaving directory to conserve available storage space on computer
-        println!("Trying to delete downloaded file potentially if you want? Copernicus get_f64_values() function");
         // Copy netcdf_file name
         //let wind_filename = wind_netcdf_file.path().expect("Could not get netcdf file path").clone();
         //// Stop using netcdf_file so it can be deleted

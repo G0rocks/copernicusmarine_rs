@@ -358,7 +358,7 @@ pub fn utc_date_time_to_string(datetime: time::UtcDateTime) -> String {
     out_string = out_string + &(datetime.month() as u8).to_string();
     out_string.push_str("-");
     out_string = out_string + &datetime.day().to_string();
-    out_string.push_str("T");
+    out_string.push_str(" ");
 
     out_string = out_string + &datetime.hour().to_string();
     out_string.push_str(":");

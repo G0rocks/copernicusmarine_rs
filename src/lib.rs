@@ -357,13 +357,29 @@ pub fn utc_date_time_to_string(datetime: time::UtcDateTime) -> String {
     }
     out_string = out_string + &(datetime.month() as u8).to_string();
     out_string.push_str("-");
+    // If day is less than 10, add a leading zero
+    if (datetime.day() as u8) < 10 {
+        out_string.push_str("0");
+    }
     out_string = out_string + &datetime.day().to_string();
     out_string.push_str(" ");
 
+    // If hour is less than 10, add a leading zero
+    if (datetime.hour() as u8) < 10 {
+        out_string.push_str("0");
+    }
     out_string = out_string + &datetime.hour().to_string();
     out_string.push_str(":");
+    // If minute is less than 10, add a leading zero
+    if (datetime.minute() as u8) < 10 {
+        out_string.push_str("0");
+    }
     out_string = out_string + &datetime.minute().to_string();
     out_string.push_str(":");
+    // If second is less than 10, add a leading zero
+    if (datetime.second() as u8) < 10 {
+        out_string.push_str("0");
+    }
     out_string = out_string + &datetime.second().to_string();
     
     // Return output

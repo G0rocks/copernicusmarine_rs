@@ -8,7 +8,6 @@
 //-------------------------------------------------------------------------------------------------------------------------
 use time;   // For start and end times
 use std::thread; // For sleeping between attempts to get data from the copernicus marine servers
-use core::panic;    // For panicking when something goes wrong
 use std::process::Command; // To run commands through the command line
 use netcdf; // For working with and using the netcdf files retrieved from the copernicus server
 use std::{io}; // To use errors
@@ -54,14 +53,14 @@ impl Copernicus {
         minimum_latitude: f64,
         maximum_latitude: f64,
         minimum_depth:  Option<f64>,
-        maximum_depth:  Option<f64>) -> netcdf::File {
+        maximum_depth:  Option<f64>) -> Result<netcdf::File, io::Error> {
 
         // Validate that minimum longitude and latitude is less or equal to maximum
         if minimum_latitude > maximum_latitude {
-            panic!("Minimum latitude must be less than or equal to maximum latitude");
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Minimum latitude must be less than or equal to maximum latitude"));
         }
         if minimum_longitude > maximum_longitude {
-            panic!("Minimum longitude must be less than or equal to maximum longitude");
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Minimum longitude must be less than or equal to maximum longitude"));
         }
 
         // Make argument
@@ -165,7 +164,7 @@ impl Copernicus {
             // println!("Error getting data from copernicusmarine toolbox subset command, attempt {}/{}. Exit code: {}. Query finished in {:?}", i+1, MAX_ATTEMPTS, exit_code, duration);
             // Assume if duration is shorter than 100 seconds that the error is not a timeout, but an error that will not be solved by trying again. Break the loop. 
             if duration < time::Duration::seconds(100) {
-                panic!("Error getting data from copernicusmarine toolbox subset command. Query finished in {:?} < 100 seconds so assume not a timeout and stopping program.\nExit code: {}. Output message: {}\n\nQuery: copernicusmarine {:?}", duration, exit_code, String::from_utf8_lossy(&output.stderr), args);
+                return Err(io::Error::new(io::ErrorKind::Other, std::format!("Error getting data from copernicusmarine toolbox subset command. Query finished in {:?} < 100 seconds so assume not a timeout and stopping program.\nExit code: {}. Output message: {}\n\nQuery: copernicusmarine {:?}", duration, exit_code, String::from_utf8_lossy(&output.stderr), args)));
             }
 
             // Before trying again, wait 1 minute as per instructions from the devs: https://github.com/mercator-ocean/copernicus-marine-toolbox/issues/392#issuecomment-3136220183
@@ -194,7 +193,7 @@ impl Copernicus {
         std::env::set_current_dir(start_dir).expect("Error changing directories");
 
         // Return file
-        return netcdf_file;
+        return Ok(netcdf_file);
     }
 
     /// Function that asks the copernicus marine server for data using the subset command and automatically scales and offsets the value
@@ -220,7 +219,10 @@ impl Copernicus {
         maximum_depth:  Option<f64>,) -> Result<Vec<Vec<f64>>, io::Error> {
 
         // Get netcdf file from Copernicus
-        let netcdf_file = self.subset(dataset_id.clone(), variables.clone(), start_datetime, end_datetime, minimum_longitude, maximum_longitude, minimum_latitude, maximum_latitude, minimum_depth, maximum_depth);
+        let netcdf_file = match self.subset(dataset_id.clone(), variables.clone(), start_datetime, end_datetime, minimum_longitude, maximum_longitude, minimum_latitude, maximum_latitude, minimum_depth, maximum_depth) {
+            Ok(file) => file,
+            Err(e) => return Err(io::Error::from(e)),
+        };
 
         // Get netcdf root from netcdf file
         let netcdf_root =  netcdf_file.root().expect("Could not get netcdf root from netcdf file");
@@ -243,7 +245,7 @@ impl Copernicus {
                 let fill_value_attr_val = fill_value_attr_option.unwrap().value().expect("Could not get fill value");
                 let fill_value = match fill_value_attr_val {
                     netcdf::AttributeValue::Double(v) => v as f64,
-                    _ => panic!("fill_value was not a Double"),
+                    _ => return Err(io::Error::new(io::ErrorKind::InvalidInput, "fill_value was not a double")),
                 };
 
                 // Check if any of the data is the fill value, if it is, return an error
@@ -261,7 +263,7 @@ impl Copernicus {
                 let scale_factor_attr_val = scale_factor_attr_option.unwrap().value().expect("Could not get scale factor value");
                 let scale_factor = match scale_factor_attr_val {
                     netcdf::AttributeValue::Double(v) => v as f64,
-                    _ => panic!("scale_factor was not a Double"),
+                    _ => return Err(io::Error::new(io::ErrorKind::InvalidInput, "scale_factor was not a double"))
                 };
                 // Scale data
                 for i in 0..data_vector.len() {
@@ -276,7 +278,7 @@ impl Copernicus {
                 let add_offset_attr_val = add_offset_attr_option.unwrap().value().expect("Could not get add_offset value");
                 let add_offset = match add_offset_attr_val {
                     netcdf::AttributeValue::Double(v) => v as f64,
-                    _ => panic!("add_offset was not a Double"),
+                    _ => return Err(io::Error::new(io::ErrorKind::InvalidInput, "add_offset was not a double"))
                 };
                 // Offset data
                 for i in 0..data_vector.len() {

@@ -205,7 +205,8 @@ impl Copernicus {
     ///
     /// * `variables` - A vector with the variables within the dataset that are being asked for
     ///
-    /// Returns a vector of vectors, the first vector contains the data for the first variable and so on and so forth
+    /// Returns a vector of vectors, the first vector contains the data for the first variable and so on and so forth.
+    /// If the value in the vector is 'None' then the value is a fill_value from the netcdf file.
     pub fn get_f64_values(&self,
         dataset_id: String,
         variables: Vec<String>,
@@ -216,7 +217,7 @@ impl Copernicus {
         minimum_latitude: f64,
         maximum_latitude: f64,
         minimum_depth:  Option<f64>,
-        maximum_depth:  Option<f64>,) -> Result<Vec<Vec<f64>>, io::Error> {
+        maximum_depth:  Option<f64>,) -> Result<Vec<Vec<Option<f64>>>, io::Error> {
 
         // Get netcdf file from Copernicus
         let netcdf_file = match self.subset(dataset_id.clone(), variables.clone(), start_datetime, end_datetime, minimum_longitude, maximum_longitude, minimum_latitude, maximum_latitude, minimum_depth, maximum_depth) {
@@ -236,7 +237,11 @@ impl Copernicus {
             let netcdf_variable = netcdf_root.variable(variable.as_str()).expect(format!("No variable '{}' found in dataset '{}'", variable, dataset_id).as_str());
 
             // Get data vectors from variables
-            let mut data_vector: Vec<f64> = netcdf_variable.get_values(netcdf::Extents::All).expect("Failed to read eastward wind");
+            let data_vector_direct: Vec<f64> = netcdf_variable.get_values(netcdf::Extents::All).expect("Failed to read eastward wind");
+            let mut data_vector: Vec<Option<f64>> = Vec::new();
+            for i in 0..data_vector_direct.len() {
+                data_vector.push(Some(data_vector_direct[i]));
+            }
 
             // Check if a fill value attribute exists
             let fill_value_attr_option = netcdf_variable.attribute("fill_value");
@@ -250,7 +255,7 @@ impl Copernicus {
 
                 // Check if any of the data is the fill value, if it is, return an error
                 for i in 0..data_vector.len() {
-                    if data_vector[i] == fill_value {
+                    if data_vector[i].unwrap() == fill_value {
                         return Err(io::Error::new(io::ErrorKind::InvalidData, format!("Fill value error for variable: {}. See entry {} in {:?}", variable, i.to_string(), data_vector[i])));
                     }
                 }
@@ -267,7 +272,7 @@ impl Copernicus {
                 };
                 // Scale data
                 for i in 0..data_vector.len() {
-                    data_vector[i] = data_vector[i]*scale_factor;
+                    data_vector[i] = Some(data_vector[i].unwrap()*scale_factor);
                 }
             }   // End if
 
@@ -282,7 +287,7 @@ impl Copernicus {
                 };
                 // Offset data
                 for i in 0..data_vector.len() {
-                    data_vector[i] = data_vector[i] + add_offset;
+                    data_vector[i] = Some(data_vector[i].unwrap() + add_offset);
                 }
             }   // End if
 

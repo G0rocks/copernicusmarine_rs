@@ -238,9 +238,15 @@ impl Copernicus {
 
             // Get data vectors from variables
             let data_vector_direct: Vec<f64> = netcdf_variable.get_values(netcdf::Extents::All).expect("Failed to read eastward wind");
+<<<<<<< HEAD
             let mut data_vector: Vec<Option<f64>> = Vec::new();
             for i in 0..data_vector_direct.len() {
                 data_vector.push(Some(data_vector_direct[i]));
+=======
+            let mut data_vector: Vec<Option<f64>> = Vec::with_capacity(data_vector_direct.len());
+            for j in 0..data_vector_direct.len() {
+                data_vector[j] = Some(data_vector_direct[j]);
+>>>>>>> 0e061a5dede915d8f6ed4fa9b48c56c05afae66e
             }
 
             // Check if a fill value attribute exists
@@ -258,7 +264,11 @@ impl Copernicus {
                 // Check if any of the data is the fill value, if it is, set the entry in the data_vector to None
                 for i in 0..data_vector.len() {
                     if data_vector[i].unwrap() == fill_value {
+<<<<<<< HEAD
                         data_vector[i] = None;
+=======
+                        return Err(io::Error::new(io::ErrorKind::InvalidData, format!("Fill value error for variable: {}. See entry {} in {:?}", variable, i.to_string(), data_vector[i])));
+>>>>>>> 0e061a5dede915d8f6ed4fa9b48c56c05afae66e
                     }
                 }
             }   // End if

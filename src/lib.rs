@@ -244,19 +244,21 @@ impl Copernicus {
             }
 
             // Check if a fill value attribute exists
-            let fill_value_attr_option = netcdf_variable.attribute("fill_value");
+            let fill_value_attr_option = netcdf_variable.attribute("_FillValue");
             if fill_value_attr_option.is_some() {
                 // Get fill value
                 let fill_value_attr_val = fill_value_attr_option.unwrap().value().expect("Could not get fill value");
                 let fill_value = match fill_value_attr_val {
                     netcdf::AttributeValue::Double(v) => v as f64,
-                    _ => return Err(io::Error::new(io::ErrorKind::InvalidInput, "fill_value was not a double")),
+                    netcdf::AttributeValue::Short(v) => v as f64,
+                    netcdf::AttributeValue::Float(v) => v as f64,
+                    _ => return Err(io::Error::new(io::ErrorKind::InvalidInput, "fill_value was not a usable number")),
                 };
 
-                // Check if any of the data is the fill value, if it is, return an error
+                // Check if any of the data is the fill value, if it is, set the entry in the data_vector to None
                 for i in 0..data_vector.len() {
                     if data_vector[i].unwrap() == fill_value {
-                        return Err(io::Error::new(io::ErrorKind::InvalidData, format!("Fill value error for variable: {}. See entry {} in {:?}", variable, i.to_string(), data_vector[i])));
+                        data_vector[i] = None;
                     }
                 }
             }   // End if

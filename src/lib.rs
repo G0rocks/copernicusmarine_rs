@@ -284,7 +284,9 @@ impl Copernicus {
                 };
                 // Scale data
                 for i in 0..data_vector.len() {
-                    data_vector[i] = Some(data_vector[i].unwrap()*scale_factor);
+                    if data_vector[i].is_some() {
+                        data_vector[i] = Some(data_vector[i].unwrap()*scale_factor);
+                    }
                 }
             }   // End if
 
@@ -299,7 +301,9 @@ impl Copernicus {
                 };
                 // Offset data
                 for i in 0..data_vector.len() {
-                    data_vector[i] = Some(data_vector[i].unwrap() + add_offset);
+                    if data_vector[i].is_some() {
+                        data_vector[i] = Some(data_vector[i].unwrap() + add_offset);
+                    }
                 }
             }   // End if
 

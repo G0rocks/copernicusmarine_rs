@@ -19,7 +19,17 @@ use std::{io}; // To use errors
 
 // Enums
 //-------------------------------------------------------------------------------------------------------------------------
-
+/// An enum that contains a list of Copernicus variables. For use with the get_dataset_id function
+/// Note to developers when adding more variables, the variables are in alphabetical order within their own category (see comments) which are also in alphabetical order
+#[derive(Debug, Clone)]
+pub enum CopernicusVariable {
+    // Ocean Current
+    EastwardSeaWaterVelocity,
+    NorthwardSeaWaterVelocity,
+    // Wind
+    EastwardWind,
+    NorthwardWind,
+}
 
 // Structs
 //-------------------------------------------------------------------------------------------------------------------------
@@ -396,15 +406,85 @@ pub fn utc_date_time_to_string(datetime: time::UtcDateTime) -> String {
 }
 
 
+/// A function that gets the dataset id for a given variable and temporal extent
+/// Note: As of 2025-09-17 almost all dates are hardcoded into this function since it is not known if the CMEMS datasets will be updated in the future or if they will remain as they are now. Please fix this if needed in future
+pub fn get_dataset_id(variable: CopernicusVariable, start_datetime: time::UtcDateTime, end_datetime: time::UtcDateTime) -> Result<String, io::Error> {
+    // Sanity check that end_datetime is indeed after start_datetime
+    if start_datetime > end_datetime {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "start_datetime must be before end_datetime or the same as end_datetime"));
+    }
+
+    // Init dataset_id
+    let dataset_id: String;
+
+    // Match variable and for each variable match the temporal extent to get the correct dataset id
+    match variable {
+        CopernicusVariable::EastwardSeaWaterVelocity | CopernicusVariable::NorthwardSeaWaterVelocity => {
+            // If start_datetime is before first possible date in GLOBAL_MULTIYEAR_PHY_001_030 then return error, see https://data.marine.copernicus.eu/viewer/expert?view=dataset&dataset=GLOBAL_MULTIYEAR_PHY_001_030
+            if start_datetime <= time::UtcDateTime::new(time::Date::from_calendar_date(1993,time::Month::January,1).unwrap(), time::Time::from_hms(0, 0, 0).unwrap()) {
+                return Err(io::Error::new(io::ErrorKind::InvalidInput, "start_datetime is before 1993-01-01 00:00:00, which is the earliest date for ocean current data in GLOBAL_MULTIYEAR_PHY_001_030"));
+            }
+            // If end_datetime is after last possible date in GLOBAL_ANALYSISFORECAST_PHY_001_024, then return error, see https://data.marine.copernicus.eu/viewer/expert?view=dataset&dataset=GLOBAL_ANALYSISFORECAST_PHY_001_024
+            // Forecast goes 10 days into future
+            if end_datetime >= (time::UtcDateTime::now() + time::Duration::days(10)) {
+                return Err(io::Error::new(io::ErrorKind::InvalidInput, "end_datetime is after the latest date for ocean current data in GLOBAL_ANALYSISFORECAST_PHY_001_024, which has a forecast up to 10 days into the future from now"));
+            }
+            // Now if the start_datetime is before the first possible date in GLOBAL_ANALYSISFORECAST_PHY_001_024
+            if start_datetime < time::UtcDateTime::new(time::Date::from_calendar_date(2020,time::Month::November,1).unwrap(), time::Time::from_hms(0, 0, 0).unwrap()) {
+                // Check if end_datetime is after the last date in GLOBAL_MULTIYEAR_PHY_001_030, if so, return error since we have to use more than one dataset to cover the temporal extent
+                if end_datetime > time::UtcDateTime::new(time::Date::from_calendar_date(2025,time::Month::August,26).unwrap(), time::Time::from_hms(0, 0, 0).unwrap()) {
+                    return Err(io::Error::new(io::ErrorKind::InvalidInput, "The temporal extent from start_datetime to end_datetime is too large and would require using more than one dataset. Please use a smaller temporal extent."));
+                }
+                // Otherwise return only the ocean current dataset_id for GLOBAL_MULTIYEAR_PHY_001_030
+                dataset_id = "cmems_mod_glo_phy_my_0.083deg_P1D-m".to_string();
+            } // Otherwise return only the ocean current dataset_id for GLOBAL_ANALYSISFORECAST_PHY_001_024
+            else {
+                dataset_id = "cmems_mod_glo_phy_anfc_0.083deg_PT1H-m".to_string();
+            }
+        },
+        CopernicusVariable::EastwardWind | CopernicusVariable::NorthwardWind => {
+            // If start_datetime is before first possible date in WIND_GLO_PHY_L4_MY_012_006 then return error, see https://data.marine.copernicus.eu/viewer/expert?view=dataset&dataset=WIND_GLO_PHY_L4_MY_012_006
+            if start_datetime <= time::UtcDateTime::new(time::Date::from_calendar_date(1994,time::Month::June,1).unwrap(), time::Time::from_hms(0, 0, 0).unwrap()) {
+                return Err(io::Error::new(io::ErrorKind::InvalidInput, "start_datetime is before 1994-06-01 00:00:00, which is the earliest date for wind data in WIND_GLO_PHY_L4_MY_012_006"));
+            }
+            // If end_datetime is after last possible date in WIND_GLO_PHY_L4_NRT_012_004, then return error, see https://data.marine.copernicus.eu/viewer/expert?view=dataset&dataset=WIND_GLO_PHY_L4_NRT_012_004
+            // No forecast, updated daily at 15:00
+            if end_datetime >= time::UtcDateTime::now() {
+                return Err(io::Error::new(io::ErrorKind::InvalidInput, "end_datetime is after the latest date for wind data in WIND_GLO_PHY_L4_NRT_012_004, which is updated daily at 15:00 UTC"));
+            }
+            // Now if the start_datetime is before the first possible date in WIND_GLO_PHY_L4_NRT_012_004
+            if start_datetime < time::UtcDateTime::new(time::Date::from_calendar_date(2023,time::Month::April,27).unwrap(), time::Time::from_hms(0, 0, 0).unwrap()) {
+                // Check if end_datetime is after the last date in WIND_GLO_PHY_L4_MY_012_006, if so, return error since we have to use more than one dataset to cover the temporal extent
+                if end_datetime > time::UtcDateTime::new(time::Date::from_calendar_date(2025,time::Month::May,21).unwrap(), time::Time::from_hms(0, 0, 0).unwrap()) {
+                    return Err(io::Error::new(io::ErrorKind::InvalidInput, "The temporal extent from start_datetime to end_datetime is too large and would require using more than one dataset. Please use a smaller temporal extent."));
+                }
+                // Otherwise return only the ocean current dataset_id for WIND_GLO_PHY_L4_MY_012_006
+                dataset_id = "cmems_obs-wind_glo_phy_my_l4_0.125deg_PT1H".to_string();
+            } // Otherwise return only the ocean current dataset_id for WIND_GLO_PHY_L4_MY_012_006
+            else {
+                dataset_id = "cmems_obs-wind_glo_phy_nrt_l4_0.125deg_PT1H".to_string();
+            }
+        }
+    }   // End match
+
+    // Return dataset_id
+    return Ok(dataset_id);
+}
+
 // Tests
 //-------------------------------------------------------------------------------------------------------------------------
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-// 
-//     #[test]
-//     fn it_works() {
-//         let result = add(2, 2);
-//         assert_eq!(result, 4);
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_dataset_id() {
+        let date = time::UtcDateTime::new(time::Date::from_calendar_date(2024,time::Month::January,1).unwrap(), time::Time::from_hms(0, 0, 0).unwrap());
+        let result = match get_dataset_id(CopernicusVariable::EastwardSeaWaterVelocity, date, date) {
+            Ok(id) => id,
+            Err(e) => panic!("Error getting dataset id: {}", e),
+        };
+        println!("Result: {:?}", result);
+        // assert_eq!(result, 4);
+    }
+}

@@ -366,7 +366,7 @@ pub fn secs_since_1990_01_01_0_to_utcdatetime(secs: i64) -> time::UtcDateTime {
 }
 
 
-/// Writes the datetime variable to the "YYYY-MM-DDTHH:MM:SS" format where the 'T' is literally just a 'T'
+/// Writes the datetime variable to the "YYYY-MM-DDTHH:MM:SS" format where the 'T' is literally just a 'T' and is there to ensure different operating system compatibility
 pub fn utc_date_time_to_string(datetime: time::UtcDateTime) -> String {
     // Init empty string
     let mut out_string = String::new();
@@ -385,7 +385,7 @@ pub fn utc_date_time_to_string(datetime: time::UtcDateTime) -> String {
         out_string.push_str("0");
     }
     out_string = out_string + &datetime.day().to_string();
-    out_string.push_str(" ");
+    out_string.push_str("T");
 
     // If hour is less than 10, add a leading zero
     if (datetime.hour() as u8) < 10 {

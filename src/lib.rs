@@ -141,10 +141,8 @@ impl Copernicus {
         args.push("--output-filename".to_string());
         args.push(filename.clone());
 
-        // println!("Querying server");
         // Run the command to query server for the data
-        // If fails, retry 2 more times
-        // Todo: If file alredy exists, overwrite or similar
+        // If fails, keep trying until successful or we get a non-timeout error
         // Init output so it exists outside of the loop
         let mut output: std::process::Output;
 
@@ -311,33 +309,36 @@ impl Copernicus {
             data_vectors.push(data_vector);
         } // End for
 
-        // TODO: Try to delete downloaded file before leaving directory to conserve available storage space on computer
-        // Copy netcdf_file name
-        //let wind_filename = wind_netcdf_file.path().expect("Could not get netcdf file path").clone();
-        //// Stop using netcdf_file so it can be deleted
-        //wind_netcdf_file.close().expect("Could not close netcdf file");
-        //// Move into output path directory
-        //let start_dir = std::env::current_dir().expect("Could not get current directory");
-        //// Change directory
-        //std::env::set_current_dir(std::path::Path::new(&simulation.copernicus.clone().unwrap().output_path)).expect("Error changing directories");
-        //// Try to delete the file
-        //match std::fs::remove_file(&wind_filename) {
-        //    Ok(_) => {}
-        //    Err(e) => {
-        //        println!("Could not delete file {:?}: {}", &wind_filename, e);
-        //            let f = std::fs::File::open(wind_filename)?;
-        //            let metadata = f.metadata().expect("Oh no, NO METADATA FOUND!");
-        //            let permissions = metadata.permissions();
-        //        println!("Permissions: {:?}", permissions);
-        //    }
-        //}
-
-        // Move back into directory
-        // std::env::set_current_dir(start_dir).expect("Error changing directories");
-
         // Return data_vector after scaling and offseting
         return Ok(data_vectors);
     }
+
+    /// Function that clears all netcdf files in the output path
+    /// Warning: Use with caution!
+    pub fn delete_all_netcdf_files_in_output_path(&self) -> Result<(), io::Error> {
+        // Get list of files in output path
+        let files = std::fs::read_dir(&self.output_path).expect("Could not read output path directory");
+
+        // Loop through each file and delete all netcdf files
+        for file in files {
+            // get path to file from DirEntry
+            let file = file.expect("Could not get path").path();
+            // Get extension
+            let extension = file.extension();
+
+            // If extension exists and is "nc", delete the file
+            if extension.is_some() {
+                if extension.unwrap() == "nc" {
+                    // Delete file
+                    std::fs::remove_file(file).expect("Could not delete netcdf file");
+                }
+            }
+        }
+
+        // Return ok
+        return Ok(());
+    }
+
 
 }
 

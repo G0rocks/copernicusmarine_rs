@@ -153,7 +153,7 @@ impl Copernicus {
             output = Command::new("copernicusmarine")
                 .args(&args)
                 .output()
-                .expect(format!("Failed to execute the given command\ncopernicusmarine with arguments: {:?}", args).as_str());
+                .expect(format!("Failed to execute the given command\ncopernicusmarine with arguments: {:?}\nMake sure you have the copernicusmarine toolbox installed\n", args).as_str());
 
             // Get exit code, if no exit code, set to -1 and assume failure
             let exit_code = match output.status.code() {

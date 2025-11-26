@@ -153,7 +153,7 @@ impl Copernicus {
             output = Command::new("copernicusmarine")
                 .args(&args)
                 .output()
-                .expect(format!("Failed to execute the given command\ncopernicusmarine with arguments: {:?}\nMake sure you have the copernicusmarine toolbox installed\n", args).as_str());
+                .expect(format!("Failed to execute the given command\ncopernicusmarine with arguments: {:?}\nMake sure you have the copernicusmarine toolbox installed\nError", args).as_str());
 
             // Get exit code, if no exit code, set to -1 and assume failure
             let exit_code = match output.status.code() {
@@ -357,7 +357,7 @@ pub fn string_first_n_chars(string_in: String, num_chars: usize) -> String {
 
 
 /// Makes the seconds since 1990-01-01 00:00:00 into a time::UtcdDateTime value
-/// Since according to datasheet the time is measured in seconds since that date: https://documentation.marine.copernicus.eu/PUM/CMEMS-WIND-PUM-012-004-006.pdf
+/// Since according to datasheet the time is measured in seconds since that date: <https://documentation.marine.copernicus.eu/PUM/CMEMS-WIND-PUM-012-004-006.pdf>
 pub fn secs_since_1990_01_01_0_to_utcdatetime(secs: i64) -> time::UtcDateTime {
     let start = time::UtcDateTime::new(time::Date::from_calendar_date(1990,time::Month::January,1).expect("Could not make time::Date"), time::Time::from_hms(0,0,0).expect("Could not make time::Time"));
 

@@ -31,6 +31,29 @@ pub enum CopernicusVariable {
     NorthwardWind,
 }
 
+/// An enum that contains all valid coordinate selection methods
+/// Read more here: <https://help.marine.copernicus.eu/en/articles/9978784-what-s-new-in-version-v2-0-0-of-the-copernicus-marine-toolbox#h_116f849776>
+#[derive(Debug, Clone)]
+pub enum CoordinatesSelectionMethod {
+    Inside,
+    StrictInside,
+    Nearest,
+    Outside,
+}
+
+impl CoordinatesSelectionMethod {
+    /// Converts the CoordinatesSelectionMethod enum to a string
+    pub fn to_string(&self) -> String {
+        match self {
+            CoordinatesSelectionMethod::Inside => "inside".to_string(),
+            CoordinatesSelectionMethod::StrictInside => "strict_inside".to_string(),
+            CoordinatesSelectionMethod::Nearest => "nearest".to_string(),
+            CoordinatesSelectionMethod::Outside => "outside".to_string(),
+        }
+    }
+}
+
+
 // Structs
 //-------------------------------------------------------------------------------------------------------------------------
 /// A struct that keeps the copernicus relevant info, like the output path. This way when we run functions we can also get this information for those function but only need to set this info once instead of passing it everytime
@@ -38,14 +61,18 @@ pub enum CopernicusVariable {
 pub struct Copernicus {
     /// The output path where the files are stored and retrieved
     pub output_path: String,
+    /// The coordinate selection method used when subsetting data. Has a default in the Copernicus::new() function
+    pub coordinates_selection_method: CoordinatesSelectionMethod,
 }
 
 // Functions
 //-------------------------------------------------------------------------------------------------------------------------
 impl Copernicus {
+    /// Creates a new Copernicus struct. Defaults the coordinate selection method to "inside".
     pub fn new(output_path: String) -> Copernicus {
         Copernicus {
-            output_path: output_path
+            output_path: output_path,
+            coordinates_selection_method: CoordinatesSelectionMethod::Inside,
         }
     }
 
@@ -109,6 +136,11 @@ impl Copernicus {
             args.push("--maximum-depth".to_string());
             args.push(maximum_depth.unwrap().to_string());
         }
+        // Specify coordinate selection method
+        args.push("--coordinates-selection-method".to_string());
+        args.push(self.coordinates_selection_method.to_string());
+
+        // Add output directory
         args.push("--output-directory".to_string());
         args.push(self.output_path.clone());
         args.push("--overwrite".to_string());   // To overwrite file if it already exists to conserve computer space

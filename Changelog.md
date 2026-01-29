@@ -18,6 +18,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - 
 
+## [2.0.0]
+
+### Added
+
+- get_f64_values() function that gets a value and takes care of the scaling and offsetting automatically
+- Minimum and maximum depth parameters to subset and get_f64_values()
+- get_dataset_id() function
+- delete_all_netcdf_files_in_output_path() function
+- reminder to have the copernicusmarine toolbox installed when fetching data fails
+- CoordinatesSelectionMethod struct
+
+### Changed
+
+- Some bugs fixed
+- subset() function will now try multiple times to get the data unless the error happens quickly, then we assume it is not a timeout and something is actually wrong
+- Fix some formatting, more consistent.
+- Improved error messages and hyperlinked some links in the documentation
+
+### Removed
+
+- Possibility for having colons in filenames since windows blocks them
+
 ## [1.0.0] - 2025-08-13
 Second release, now the crate is way more reliable and descriptive when it can't do things! Woohoo!
 
